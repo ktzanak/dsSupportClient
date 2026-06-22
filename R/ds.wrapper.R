@@ -77,6 +77,16 @@ ds.wrapper <- function(df = "D", ds_function = NULL, datasources = NULL,  save =
     stop("You need to specify an aggregate DataSHIELD function.")
   }
 
+  if (!is.character(ds_function) || length(ds_function) != 1) {
+    stop("ds_function must be a single string, e.g. 'ds.class'")
+  }
+
+  if (!exists(ds_function, mode = "function")) {
+    stop(paste0("Function '", ds_function, "' not found"))
+  }
+
+  ds_fun_name <- ds_function
+  ds_function <- get(ds_function, mode = "function")
 
   #Check whether object are present in all datasources: waiting for function to be exported in dsBaseClient, otherwise R CMD Check failure
   #defined <- dsBaseClient:::isDefined(datasources, df)
@@ -87,7 +97,7 @@ ds.wrapper <- function(df = "D", ds_function = NULL, datasources = NULL,  save =
 
   for (p in 1:length(datasources)){
 
-    colNames <- paste0(datasources[[p]]@name,".",(strsplit(as.character(substitute(ds_function)), ".",fixed =TRUE))[[1]][2])
+    colNames <- paste0(datasources[[p]]@name,".",(strsplit(ds_fun_name, ".",fixed =TRUE))[[1]][2])
 
 
     y <- data.frame()
@@ -114,8 +124,8 @@ ds.wrapper <- function(df = "D", ds_function = NULL, datasources = NULL,  save =
 
 
   if (save == TRUE){
-    utils::write.csv(summary, file = paste0(as.character(substitute(ds_function)),"_overview.csv"), row.names = TRUE)
-    print(paste0("The overview file ", paste0("'",as.character(substitute(ds_function)),"_overview.csv'")," has been saved at ",getwd(), "."))
+    utils::write.csv(summary, file = paste0(ds_fun_name,"_overview.csv"), row.names = TRUE)
+    print(paste0("The overview file ", paste0("'",ds_fun_name,"_overview.csv'")," has been saved at ",getwd(), "."))
   }
 
   return(summary)
